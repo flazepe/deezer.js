@@ -7,7 +7,11 @@ declare module "@flazepe/deezer.js" {
 		get(
 			idOrURL: string,
 			type?: EntityType
-		): Promise<{ info: Record<string, any>; tracks: Array<Record<string, any>> } | null>;
+		): Promise<{
+			type: EntityType;
+			info: Record<string, any>;
+			tracks: Array<Record<string, any>>;
+		} | null>;
 		getAndDecryptTrack(track: any): Promise<Buffer>;
 	}
 }
