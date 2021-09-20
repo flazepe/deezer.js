@@ -1,5 +1,3 @@
-import { RequestOptions } from "https";
-
 declare module "deezer.js" {
 	export type EntityType = "track" | "album" | "artist" | "playlist";
 
