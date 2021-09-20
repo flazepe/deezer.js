@@ -70,7 +70,7 @@ module.exports.Deezer = class Deezer {
 	 * @returns {Promise<Array>} An array of search results.
 	 */
 	async search(query, type) {
-		type = type.toLowerCase();
+		type = type?.toLowerCase();
 		if (!ENTITY_TYPES.includes(type)) type = "track";
 
 		return (await this.api("deezer.pageSearch", { query, start: 0, nb: 200, top_tracks: true }))

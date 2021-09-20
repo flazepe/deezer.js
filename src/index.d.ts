@@ -3,7 +3,7 @@ declare module "@flazepe/deezer.js" {
 
 	export class Deezer {
 		api(method: string, body: Record<string, any>): Promise<Record<string, any>>;
-		search(query: string, type: EntityType): Promise<Array<Record<string, any>>>;
+		search(query: string, type?: EntityType): Promise<Array<Record<string, any>>>;
 		get(
 			idOrURL: string,
 			type?: EntityType
