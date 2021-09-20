@@ -9,9 +9,6 @@ module.exports.Deezer = class Deezer {
 	#apiToken = null;
 	#licenseToken = null;
 
-	/**
-	 * Creates a new instance of Deezer.
-	 */
 	constructor() {}
 
 	#request(url, options = {}) {
