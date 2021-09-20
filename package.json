@@ -5,12 +5,15 @@
 	"main": "src/index.js",
 	"types": "src/index.d.ts",
 	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1",
 		"docma:build": "docma build",
 		"docma:serve": "docma serve"
 	},
 	"author": "flazepe",
 	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/flazepe/deezer.js.git"
+	},
 	"devDependencies": {
 		"docma": "^3.2.2"
 	}
