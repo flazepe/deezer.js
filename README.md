@@ -5,10 +5,10 @@ A simple package to interact with the Deezer API with track download support.
 # Example
 
 ```js
-const { Deezer } =  require("deezer.js"),
-	deezer =  new  Deezer();
+const { Deezer } = require("deezer.js"),
+	deezer = new Deezer();
 
-	(async () => {
+(async () => {
 	const track = (await deezer.search("Re Bon Yoyage", "track"))[0];
 
 	// Save track to a file
