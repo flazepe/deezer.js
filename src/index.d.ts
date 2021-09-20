@@ -1,4 +1,4 @@
-declare module "deezer.js" {
+declare module "@flazepe/deezer.js" {
 	export type EntityType = "track" | "album" | "artist" | "playlist";
 
 	export class Deezer {

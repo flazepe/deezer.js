@@ -5,7 +5,7 @@ A simple package to interact with the Deezer API with track download support.
 # Example
 
 ```js
-const { Deezer } = require("deezer.js"),
+const { Deezer } = require("@flazepe/deezer.js"),
 	deezer = new Deezer();
 
 (async () => {
