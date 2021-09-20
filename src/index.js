@@ -9,6 +9,9 @@ module.exports.Deezer = class Deezer {
 	#apiToken = null;
 	#licenseToken = null;
 
+	/**
+	 * Creates a new instance of Deezer.
+	 */
 	constructor() {}
 
 	#request(url, options = {}) {
@@ -45,7 +48,7 @@ module.exports.Deezer = class Deezer {
 	/**
 	 * Does a request to the Deezer API.
 	 * @param {string} method The Deezer API method.
-	 * @param {any} [body] The JSON body.
+	 * @param {Object} [body] The JSON body.
 	 * @returns {Promise<Object>} The response.
 	 */
 	async api(method, body) {
@@ -135,7 +138,7 @@ module.exports.Deezer = class Deezer {
 
 	/**
 	 * Gets a track buffer and decrypts it.
-	 * @param {any} track The track object.
+	 * @param {Object} track The track object.
 	 * @returns {Promise<Buffer>} The decrypted track buffer.
 	 */
 	async getAndDecryptTrack(track) {
