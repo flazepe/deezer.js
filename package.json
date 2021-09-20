@@ -1,0 +1,17 @@
+{
+	"name": "deezer.js",
+	"version": "1.0.0",
+	"description": "A simple package to interact with the Deezer API with track download support.",
+	"main": "src/index.js",
+	"types": "src/index.d.ts",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"docma:build": "docma build",
+		"docma:serve": "docma serve"
+	},
+	"author": "flazepe",
+	"license": "MIT",
+	"devDependencies": {
+		"docma": "^3.2.2"
+	}
+}
