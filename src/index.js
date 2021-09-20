@@ -92,7 +92,7 @@ module.exports.Deezer = class Deezer {
 			type = ENTITY_TYPES.find(e => idOrURL.toLowerCase().includes(e));
 			idOrURL = idOrURL.split("/").pop().split("?").shift();
 
-			if (!type || isNaN(idOrURL)) return null;
+			if (!type || !/^[0-9]+$/.test(idOrURL)) return null;
 		}
 
 		const data = { type };
@@ -130,7 +130,7 @@ module.exports.Deezer = class Deezer {
 				break;
 		}
 
-		return !data.info ? null : data;
+		return data.info ? data : null;
 	}
 
 	/**
