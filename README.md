@@ -18,3 +18,7 @@ const { Deezer } = require("deezer.js"),
 	);
 })();
 ```
+
+# Documentation
+
+https://flazepe.github.io/deezer.js/
