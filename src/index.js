@@ -45,7 +45,7 @@ module.exports.Deezer = class Deezer {
 	/**
 	 * Does a request to the Deezer API.
 	 * @param {string} method The Deezer API method.
-	 * @param {Object} [body] The JSON body.
+	 * @param {Object} body The JSON body.
 	 * @returns {Promise<Object>} The response.
 	 */
 	async api(method, body) {
