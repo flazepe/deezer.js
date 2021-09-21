@@ -9,7 +9,7 @@ const { Deezer } = require("@flazepe/deezer.js"),
 	deezer = new Deezer();
 
 (async () => {
-	const track = (await deezer.search("Re Bon Yoyage", "track"))[0];
+	const track = (await deezer.search("Re Bon Yoyage"))[0];
 
 	// Save track to a file
 	require("fs").writeFileSync(
