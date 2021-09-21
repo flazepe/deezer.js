@@ -1,7 +1,7 @@
 {
 	"name": "@flazepe/deezer.js",
 	"version": "1.0.1",
-	"description": "A simple package to interact with the Deezer API with track download support.",
+	"description": "A simple package to interact with the Deezer API with track decryption support.",
 	"main": "src/index.js",
 	"types": "src/index.d.ts",
 	"engines": {
