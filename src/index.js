@@ -3,7 +3,7 @@ const { createDecipheriv, createHash } = require("crypto"),
 	CBC_KEY = "g4el58wc" + "0zvf9na1",
 	ENTITY_TYPES = ["track", "album", "artist", "playlist"];
 
-module.exports.Deezer = class Deezer {
+class Deezer {
 	#initialized = false;
 	#sessionID = null;
 	#apiToken = null;
@@ -197,4 +197,6 @@ module.exports.Deezer = class Deezer {
 
 		return decryptedBuffer;
 	}
-};
+}
+
+module.exports = { Deezer };
