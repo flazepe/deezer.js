@@ -1,10 +1,10 @@
 const { createDecipheriv, createHash } = require("crypto"),
-	{ request } = require("https"),
-	CBC_KEY = "g4el58wc" + "0zvf9na1",
-	ENTITY_TYPES = ["track", "album", "artist", "playlist"],
-	SESSION_EXPIRE = 900000;
+	{ request } = require("https");
 
 class Deezer {
+	static #CBC_KEY = "g4el58wc" + "0zvf9na1";
+	static #ENTITY_TYPES = ["track", "album", "artist", "playlist"];
+	static #SESSION_EXPIRE = 900000;
 	#currentSessionTimestamp = null;
 	#sessionID = null;
 	#apiToken = null;
@@ -33,7 +33,7 @@ class Deezer {
 	}
 
 	async #ensureSession() {
-		if (this.#currentSessionTimestamp + SESSION_EXPIRE > Date.now()) return;
+		if (this.#currentSessionTimestamp + Deezer.#SESSION_EXPIRE > Date.now()) return;
 
 		const userData = await this.#request(
 			"https://www.deezer.com/ajax/gw-light.php?method=deezer.getUserData&input=3&api_version=1.0&api_token="
@@ -74,7 +74,7 @@ class Deezer {
 	 */
 	async search(query, type) {
 		type = type?.toLowerCase();
-		if (!ENTITY_TYPES.includes(type)) type = "track";
+		if (!Deezer.#ENTITY_TYPES.includes(type)) type = "track";
 
 		return (await this.api("deezer.pageSearch", { query, start: 0, nb: 200, top_tracks: true }))
 			.results[type.toUpperCase()].data;
@@ -92,7 +92,7 @@ class Deezer {
 		} else {
 			while (idOrURL.endsWith("/")) idOrURL = idOrURL.slice(0, -1);
 
-			type = ENTITY_TYPES.find(e => idOrURL.toLowerCase().includes(e));
+			type = Deezer.#ENTITY_TYPES.find(e => idOrURL.toLowerCase().includes(e));
 			idOrURL = idOrURL.split("/").pop().split("?").shift();
 
 			if (!type || !/^[0-9]+$/.test(idOrURL)) return null;
@@ -169,7 +169,7 @@ class Deezer {
 
 				for (let i = 0; i < 16; i++)
 					key += String.fromCharCode(
-						md5.charCodeAt(i) ^ md5.charCodeAt(i + 16) ^ CBC_KEY.charCodeAt(i)
+						md5.charCodeAt(i) ^ md5.charCodeAt(i + 16) ^ Deezer.#CBC_KEY.charCodeAt(i)
 					);
 
 				return key;
