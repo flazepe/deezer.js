@@ -21,5 +21,5 @@ const { Deezer } = require("@flazepe/deezer.js"),
 
 # Links
 
-[Documentation](https://flazepe.github.io/deezer.js/)
-[npm](https://www.npmjs.com/package/@flazepe/deezer.js)
+-   [Documentation](https://flazepe.github.io/deezer.js/)
+-   [npm](https://www.npmjs.com/package/@flazepe/deezer.js)
