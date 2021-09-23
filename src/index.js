@@ -1,10 +1,11 @@
 const { createDecipheriv, createHash } = require("crypto"),
 	{ request } = require("https"),
 	CBC_KEY = "g4el58wc" + "0zvf9na1",
-	ENTITY_TYPES = ["track", "album", "artist", "playlist"];
+	ENTITY_TYPES = ["track", "album", "artist", "playlist"],
+	SESSION_EXPIRE = 900000;
 
 class Deezer {
-	#initialized = false;
+	#currentSessionTimestamp = null;
 	#sessionID = null;
 	#apiToken = null;
 	#licenseToken = null;
@@ -31,12 +32,14 @@ class Deezer {
 		);
 	}
 
-	async #initialize() {
+	async #ensureSession() {
+		if (this.#currentSessionTimestamp + SESSION_EXPIRE > Date.now()) return;
+
 		const userData = await this.#request(
 			"https://www.deezer.com/ajax/gw-light.php?method=deezer.getUserData&input=3&api_version=1.0&api_token="
 		);
 
-		this.#initialized = true;
+		this.#currentSessionTimestamp = Date.now();
 		this.#sessionID = userData.results.SESSION_ID;
 		this.#apiToken = userData.results.checkForm;
 		this.#licenseToken = userData.results.USER.OPTIONS.license_token;
@@ -49,7 +52,7 @@ class Deezer {
 	 * @returns {Promise<Object>} The response.
 	 */
 	async api(method, body) {
-		if (!this.#initialized) await this.#initialize();
+		await this.#ensureSession();
 
 		return this.#request(
 			`https://www.deezer.com/ajax/gw-light.php?method=${method}&input=3&api_version=1.0&api_token=${
@@ -139,7 +142,7 @@ class Deezer {
 	 * @returns {Promise<Buffer>} The decrypted track buffer.
 	 */
 	async getAndDecryptTrack(track) {
-		if (!this.#initialized) await this.#initialize();
+		await this.#ensureSession();
 
 		const buffer = await this.#request(
 				(
