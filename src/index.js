@@ -52,6 +52,9 @@ class Deezer {
 	 * @returns {Promise<Object>} The response.
 	 */
 	async api(method, body) {
+		if (typeof method !== "string") throw new TypeError("`method` must be a string!");
+		if (body?.constructor !== Object) throw new TypeError("`body` must be an object!");
+
 		await this.#ensureSession();
 
 		return this.#request(
@@ -73,7 +76,9 @@ class Deezer {
 	 * @returns {Promise<Array>} An array of search results.
 	 */
 	async search(query, type) {
-		type = type?.toLowerCase();
+		if (typeof query !== "string") throw new TypeError("`query` must be a string!");
+
+		type = type?.toLowerCase?.();
 		if (!Deezer.#ENTITY_TYPES.includes(type)) type = "track";
 
 		return (await this.api("deezer.pageSearch", { query, start: 0, nb: 200, top_tracks: true }))
@@ -87,7 +92,10 @@ class Deezer {
 	 * @returns {Promise<Object | null>} An object with entity info and resolved tracks.
 	 */
 	async get(idOrURL, type) {
+		if (typeof idOrURL !== "string") throw new TypeError("`idOrURL` must be a string!");
+
 		if (type) {
+			if (typeof type !== "string") throw new TypeError("`type` must be a string!");
 			type = type.toLowerCase();
 		} else {
 			while (idOrURL.endsWith("/")) idOrURL = idOrURL.slice(0, -1);
@@ -142,6 +150,11 @@ class Deezer {
 	 * @returns {Promise<Buffer>} The decrypted track buffer.
 	 */
 	async getAndDecryptTrack(track) {
+		if (track?.constructor !== Object) throw new TypeError("`track` must be an object!");
+
+		if (["SNG_ID", "TRACK_TOKEN"].some(e => !(e in track)))
+			throw new TypeError("`track` must be a valid track object!");
+
 		await this.#ensureSession();
 
 		const buffer = await this.#request(
