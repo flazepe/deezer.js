@@ -1,16 +1,25 @@
-const { createDecipheriv, createHash } = require("crypto"),
+const blowfish = require("blowfish-js"),
+	{ createHash } = require("crypto"),
 	{ request } = require("https");
 
 class Deezer {
 	static #CBC_KEY = "g4el58wc" + "0zvf9na1";
 	static #ENTITY_TYPES = ["track", "album", "artist", "playlist"];
-	static #SESSION_EXPIRE = 900000;
+	static #SESSION_EXPIRE = 60000 * 15;
 	#currentSessionTimestamp = null;
 	#sessionID = null;
 	#apiToken = null;
+	#isPremium = false;
 	#licenseToken = null;
 
-	constructor() {}
+	/**
+	 * Constructs the Deezer class.
+	 * @param {string} [sessionID] The Deezer user session ID, for authenticating as a Deezer Premium account.
+	 * @returns {Object} The Deezer class instance.
+	 */
+	constructor(sessionID) {
+		if (typeof sessionID === "string") this.#sessionID = sessionID;
+	}
 
 	#request(url, options = {}) {
 		return new Promise((resolve, reject) =>
@@ -35,14 +44,15 @@ class Deezer {
 	async #ensureSession() {
 		if (this.#currentSessionTimestamp + Deezer.#SESSION_EXPIRE > Date.now()) return;
 
-		const userData = await this.#request(
-			"https://www.deezer.com/ajax/gw-light.php?method=deezer.getUserData&input=3&api_version=1.0&api_token="
-		);
+		const data = await this.#request("https://www.deezer.com/ajax/gw-light.php?method=deezer.getUserData&input=3&api_version=1.0&api_token=", {
+			headers: this.#sessionID ? { cookie: `sid=${this.#sessionID}` } : null
+		});
 
 		this.#currentSessionTimestamp = Date.now();
-		this.#sessionID = userData.results.SESSION_ID;
-		this.#apiToken = userData.results.checkForm;
-		this.#licenseToken = userData.results.USER.OPTIONS.license_token;
+		this.#sessionID = data.results.SESSION_ID;
+		this.#apiToken = data.results.checkForm;
+		this.#isPremium = data.results.OFFER_NAME !== "Deezer Free";
+		this.#licenseToken = data.results.USER.OPTIONS.license_token;
 	}
 
 	/**
@@ -57,16 +67,11 @@ class Deezer {
 
 		await this.#ensureSession();
 
-		return this.#request(
-			`https://www.deezer.com/ajax/gw-light.php?method=${method}&input=3&api_version=1.0&api_token=${
-				this.#apiToken
-			}`,
-			{
-				method: "POST",
-				headers: { cookie: `sid=${this.#sessionID}` },
-				body: JSON.stringify(body)
-			}
-		);
+		return this.#request(`https://www.deezer.com/ajax/gw-light.php?method=${method}&input=3&api_version=1.0&api_token=${this.#apiToken}`, {
+			method: "POST",
+			headers: { cookie: `sid=${this.#sessionID}` },
+			body: JSON.stringify(body)
+		});
 	}
 
 	/**
@@ -81,8 +86,7 @@ class Deezer {
 		type = type?.toLowerCase?.();
 		if (!Deezer.#ENTITY_TYPES.includes(type)) type = "track";
 
-		return (await this.api("deezer.pageSearch", { query, start: 0, nb: 200, top_tracks: true }))
-			.results[type.toUpperCase()].data;
+		return (await this.api("deezer.pageSearch", { query, start: 0, nb: 200, top_tracks: true })).results[type.toUpperCase()].data;
 	}
 
 	/**
@@ -110,32 +114,25 @@ class Deezer {
 
 		switch (type) {
 			case "track":
-				const track = (await this.api("song.getListData", { sng_ids: [idOrURL] })).results
-					.data[0];
+				const track = (await this.api("song.getListData", { sng_ids: [idOrURL] })).results.data[0];
 
 				Object.assign(data, { info: track, tracks: [track] });
 				break;
 
 			case "album":
-				const album = (
-					await this.api("deezer.pageAlbum", { alb_id: idOrURL, nb: 200, lang: "us" })
-				).results;
+				const album = (await this.api("deezer.pageAlbum", { alb_id: idOrURL, nb: 200, lang: "us" })).results;
 
 				Object.assign(data, { info: album.DATA, tracks: album.SONGS?.data ?? [] });
 				break;
 
 			case "artist":
-				const artist = (
-					await this.api("deezer.pageArtist", { art_id: idOrURL, lang: "us" })
-				).results;
+				const artist = (await this.api("deezer.pageArtist", { art_id: idOrURL, lang: "us" })).results;
 
 				Object.assign(data, { info: artist.DATA, tracks: artist.TOP?.data ?? [] });
 				break;
 
 			case "playlist":
-				const playlist = (
-					await this.api("deezer.pagePlaylist", { playlist_id: idOrURL, nb: 200 })
-				).results;
+				const playlist = (await this.api("deezer.pagePlaylist", { playlist_id: idOrURL, nb: 200 })).results;
 
 				Object.assign(data, { info: playlist.DATA, tracks: playlist.SONGS?.data ?? [] });
 				break;
@@ -147,65 +144,63 @@ class Deezer {
 	/**
 	 * Gets a track buffer and decrypts it.
 	 * @param {Object} track The track object.
+	 * @param {boolean} [flac = false] Whether to get the track in FLAC. Works for Deezer Premium accounts only.
 	 * @returns {Promise<Buffer>} The decrypted track buffer.
 	 */
-	async getAndDecryptTrack(track) {
+	async getAndDecryptTrack(track, flac = false) {
 		if (track?.constructor !== Object) throw new TypeError("`track` must be an object!");
-
-		if (["SNG_ID", "TRACK_TOKEN"].some(e => !(e in track)))
-			throw new TypeError("`track` must be a valid track object!");
+		if (["SNG_ID", "TRACK_TOKEN"].some(e => !(e in track))) throw new TypeError("`track` must be a valid track object!");
 
 		await this.#ensureSession();
+		if (!this.#isPremium && flac)
+			throw new Error("FLAC is only supported on Deezer Premium accounts. Please provide the session ID found in cookies to the constructor.");
 
-		const buffer = await this.#request(
-				(
-					await this.#request("https://media.deezer.com/v1/get_url", {
-						method: "POST",
-						body: JSON.stringify({
-							license_token: this.#licenseToken,
-							media: [
-								{
-									type: "FULL",
-									formats: [{ cipher: "BF_CBC_STRIPE", format: "MP3_128" }]
-								}
-							],
-							track_tokens: [track.TRACK_TOKEN]
-						})
-					})
-				).data[0].media[0].sources[0].url,
-				{ buffer: true }
+		console.log(this.#isPremium);
+
+		const data = await this.#request("https://media.deezer.com/v1/get_url", {
+			method: "POST",
+			body: JSON.stringify({
+				license_token: this.#licenseToken,
+				media: [
+					{
+						type: "FULL",
+						formats: [{ cipher: "BF_CBC_STRIPE", format: flac ? "FLAC" : this.#isPremium ? "MP3_320" : "MP3_128" }]
+					}
+				],
+				track_tokens: [track.TRACK_TOKEN]
+			})
+		});
+
+		if (data.errors) throw new Error(data.errors[0]?.message ?? "An unknown error occurred.");
+
+		const buffer = await this.#request(data.data[0].media[0].sources[0].url, { buffer: true }),
+			blowfishKey = blowfish.key(
+				(() => {
+					const md5 = createHash("md5").update(track.SNG_ID, "ascii").digest("hex");
+					let key = "";
+					for (let i = 0; i < 16; i++)
+						key += String.fromCharCode(md5.charCodeAt(i) ^ md5.charCodeAt(i + 16) ^ Deezer.#CBC_KEY.charCodeAt(i));
+					return key;
+				})()
 			),
-			blowFishKey = (() => {
-				const md5 = createHash("md5").update(track.SNG_ID, "ascii").digest("hex");
-
-				let key = "";
-
-				for (let i = 0; i < 16; i++)
-					key += String.fromCharCode(
-						md5.charCodeAt(i) ^ md5.charCodeAt(i + 16) ^ Deezer.#CBC_KEY.charCodeAt(i)
-					);
-
-				return key;
-			})(),
 			decryptedBuffer = Buffer.alloc(buffer.length);
 
 		let i = 0,
 			position = 0;
 
 		while (position < buffer.length) {
-			const chunkSize = buffer.length - position >= 2048 ? 2048 : buffer.length - position,
-				chunk = Buffer.alloc(chunkSize);
+			const chunkSize = Math.min(2048, buffer.length - position);
 
+			let chunk = Buffer.alloc(chunkSize);
 			buffer.copy(chunk, 0, position, position + chunkSize);
 
-			const chunkString =
-				i % 3 || chunkSize < 2048
-					? chunk.toString("binary")
-					: createDecipheriv("bf-cbc", blowFishKey, Buffer.from([0, 1, 2, 3, 4, 5, 6, 7]))
-							.setAutoPadding(false)
-							.update(chunk, "binary", "binary");
+			if (i % 3 || chunkSize < 2048) {
+				chunk = chunk.toString("binary");
+			} else {
+				chunk = blowfish.cbc(blowfishKey, Buffer.from([0, 1, 2, 3, 4, 5, 6, 7]), chunk, true).toString("binary");
+			}
 
-			decryptedBuffer.write(chunkString, position, chunkString.length, "binary");
+			decryptedBuffer.write(chunk, position, chunk.length, "binary");
 
 			position += chunkSize;
 			i++;

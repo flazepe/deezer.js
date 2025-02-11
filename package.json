@@ -4,9 +4,6 @@
 	"description": "A simple package to interact with the Deezer API with track decryption support.",
 	"main": "src/index.js",
 	"types": "src/index.d.ts",
-	"engines": {
-		"node": ">=14.0.0"
-	},
 	"scripts": {
 		"docma:build": "docma build",
 		"docma:serve": "docma serve"
@@ -19,5 +16,8 @@
 	},
 	"devDependencies": {
 		"docma": "^3.2.2"
+	},
+	"dependencies": {
+		"blowfish-js": "^1.0.0"
 	}
 }
