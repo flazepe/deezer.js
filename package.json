@@ -5,8 +5,7 @@
 	"main": "src/index.js",
 	"types": "src/index.d.ts",
 	"scripts": {
-		"docma:build": "docma build",
-		"docma:serve": "docma serve"
+		"docs:build": "jsdoc src/index.js -c jsdoc.json -d docs"
 	},
 	"author": "flazepe",
 	"license": "MIT",
@@ -14,10 +13,11 @@
 		"type": "git",
 		"url": "https://github.com/flazepe/deezer.js.git"
 	},
-	"devDependencies": {
-		"docma": "^3.2.2"
-	},
 	"dependencies": {
 		"blowfish-js": "^1.0.0"
+	},
+	"devDependencies": {
+		"clean-jsdoc-theme": "^4.3.0",
+		"jsdoc": "^4.0.4"
 	}
 }

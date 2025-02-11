@@ -1,5 +1,0 @@
-{
-	"src": ["src/**/*.js"],
-	"dest": "docs",
-	"app": { "title": "Deezer.js Documentation", "base": "/deezer.js" }
-}

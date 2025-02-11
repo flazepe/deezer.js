@@ -14,8 +14,8 @@ class Deezer {
 
 	/**
 	 * Constructs the Deezer class.
-	 * @param {string} [sessionID] The Deezer user session ID, for authenticating as a Deezer Premium account.
-	 * @returns {Object} The Deezer class instance.
+	 * @param {string} [sessionID] The Deezer user session ID, for authenticating as a Deezer Premium account
+	 * @returns {Object} The Deezer class instance
 	 */
 	constructor(sessionID) {
 		if (typeof sessionID === "string") this.#sessionID = sessionID;
@@ -57,13 +57,13 @@ class Deezer {
 
 	/**
 	 * Does a request to the Deezer API.
-	 * @param {string} method The Deezer API method.
-	 * @param {Object} body The JSON body.
-	 * @returns {Promise<Object>} The response.
+	 * @param {string} method The Deezer API method
+	 * @param {Object} body The JSON body
+	 * @returns {Promise<Object>} The response
 	 */
 	async api(method, body) {
-		if (typeof method !== "string") throw new TypeError("`method` must be a string!");
-		if (body?.constructor !== Object) throw new TypeError("`body` must be an object!");
+		if (typeof method !== "string") throw new TypeError("`method` must be a string.");
+		if (body?.constructor !== Object) throw new TypeError("`body` must be an object.");
 
 		await this.#ensureSession();
 
@@ -76,12 +76,12 @@ class Deezer {
 
 	/**
 	 * Searches for entities.
-	 * @param {string} query The query.
-	 * @param {"track" | "album" | "artist" | "playlist"} [type = "track"] The entity type.
-	 * @returns {Promise<Array>} An array of search results.
+	 * @param {string} query The query
+	 * @param {"track" | "album" | "artist" | "playlist"} [type = "track"] The entity type
+	 * @returns {Promise<Array>} An array of search results
 	 */
 	async search(query, type) {
-		if (typeof query !== "string") throw new TypeError("`query` must be a string!");
+		if (typeof query !== "string") throw new TypeError("`query` must be a string.");
 
 		type = type?.toLowerCase?.();
 		if (!Deezer.#ENTITY_TYPES.includes(type)) type = "track";
@@ -91,15 +91,15 @@ class Deezer {
 
 	/**
 	 * Gets an entity by ID or URL.
-	 * @param {string} idOrURL The entity ID or URL.
-	 * @param {"track" | "album" | "artist" | "playlist"} [type] The entity type. Optional if a URL is provided.
-	 * @returns {Promise<Object | null>} An object with entity info and resolved tracks.
+	 * @param {string} idOrURL The entity ID or URL
+	 * @param {"track" | "album" | "artist" | "playlist"} [type] The entity type. Optional if a URL is provided
+	 * @returns {Promise<Object | null>} An object with entity info and resolved tracks
 	 */
 	async get(idOrURL, type) {
-		if (typeof idOrURL !== "string") throw new TypeError("`idOrURL` must be a string!");
+		if (typeof idOrURL !== "string") throw new TypeError("`idOrURL` must be a string.");
 
 		if (type) {
-			if (typeof type !== "string") throw new TypeError("`type` must be a string!");
+			if (typeof type !== "string") throw new TypeError("`type` must be a string.");
 			type = type.toLowerCase();
 		} else {
 			while (idOrURL.endsWith("/")) idOrURL = idOrURL.slice(0, -1);
@@ -142,20 +142,19 @@ class Deezer {
 	}
 
 	/**
-	 * Gets a track buffer and decrypts it.
-	 * @param {Object} track The track object.
-	 * @param {boolean} [flac = false] Whether to get the track in FLAC. Works for Deezer Premium accounts only.
-	 * @returns {Promise<Buffer>} The decrypted track buffer.
+	 * Gets a track buffer and decrypts it. By default, the track is in MP3.
+	 * @param {Object} track The track object
+	 * @param {boolean} [flac = false] Whether to get the track in FLAC. Works for Deezer Premium accounts only
+	 * @returns {Promise<Buffer>} The decrypted track buffer
 	 */
 	async getAndDecryptTrack(track, flac = false) {
-		if (track?.constructor !== Object) throw new TypeError("`track` must be an object!");
-		if (["SNG_ID", "TRACK_TOKEN"].some(e => !(e in track))) throw new TypeError("`track` must be a valid track object!");
+		if (track?.constructor !== Object) throw new TypeError("`track` must be an object.");
+		if (["SNG_ID", "TRACK_TOKEN"].some(e => !(e in track))) throw new TypeError("`track` must be a valid track object.");
 
 		await this.#ensureSession();
-		if (!this.#isPremium && flac)
-			throw new Error("FLAC is only supported on Deezer Premium accounts. Please provide the session ID found in cookies to the constructor.");
 
-		console.log(this.#isPremium);
+		if (flac && !this.#isPremium)
+			throw new Error("FLAC is only supported on Deezer Premium accounts. Please provide the session ID found in cookies to the constructor.");
 
 		const data = await this.#request("https://media.deezer.com/v1/get_url", {
 			method: "POST",
@@ -171,17 +170,14 @@ class Deezer {
 			})
 		});
 
-		if (data.errors) throw new Error(data.errors[0]?.message ?? "An unknown error occurred.");
+		if (data.errors) throw new Error(data.errors[0].message);
 
 		const buffer = await this.#request(data.data[0].media[0].sources[0].url, { buffer: true }),
+			md5 = createHash("md5").update(track.SNG_ID).digest("hex"),
 			blowfishKey = blowfish.key(
-				(() => {
-					const md5 = createHash("md5").update(track.SNG_ID, "ascii").digest("hex");
-					let key = "";
-					for (let i = 0; i < 16; i++)
-						key += String.fromCharCode(md5.charCodeAt(i) ^ md5.charCodeAt(i + 16) ^ Deezer.#CBC_KEY.charCodeAt(i));
-					return key;
-				})()
+				Array(16)
+					.fill(0)
+					.reduce((acc, _, i) => acc + String.fromCharCode(md5.charCodeAt(i) ^ md5.charCodeAt(i + 16) ^ Deezer.#CBC_KEY.charCodeAt(i)), "")
 			),
 			decryptedBuffer = Buffer.alloc(buffer.length);
 
