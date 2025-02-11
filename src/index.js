@@ -13,6 +13,7 @@ class Deezer {
 	static #CBC_KEY = "g4el58wc" + "0zvf9na1";
 	static #ENTITY_TYPES = ["track", "album", "artist", "playlist"];
 	static #SESSION_EXPIRE = 60000 * 15;
+	#arl = null;
 	#currentSessionTimestamp = null;
 	#sessionID = null;
 	#apiToken = null;
@@ -21,11 +22,11 @@ class Deezer {
 
 	/**
 	 * Constructs the Deezer class.
-	 * @param {string} [sessionID] The Deezer user session ID, for authenticating as a Deezer Premium account
+	 * @param {string} [arl] The Deezer ARL cookie, for authenticating as a Deezer Premium account
 	 * @returns {Object} The Deezer class instance
 	 */
-	constructor(sessionID) {
-		if (typeof sessionID === "string") this.#sessionID = sessionID;
+	constructor(arl) {
+		if (typeof arl === "string") this.#arl = arl;
 	}
 
 	#request(url, options = {}) {
@@ -52,7 +53,7 @@ class Deezer {
 		if (this.#currentSessionTimestamp + Deezer.#SESSION_EXPIRE > Date.now()) return;
 
 		const data = await this.#request("https://www.deezer.com/ajax/gw-light.php?method=deezer.getUserData&input=3&api_version=1.0&api_token=", {
-			headers: this.#sessionID ? { cookie: `sid=${this.#sessionID}` } : null
+			headers: this.#arl ? { cookie: `arl=${this.#arl}` } : null
 		});
 
 		this.#currentSessionTimestamp = Date.now();
@@ -158,7 +159,7 @@ class Deezer {
 		await this.#ensureSession();
 
 		if (flac && !this.#isPremium)
-			throw new Error("FLAC is only supported on Deezer Premium accounts. Please provide the session ID found in cookies to the constructor.");
+			throw new Error("FLAC is only supported on Deezer Premium accounts. Please provide the Deezer ARL cookie to the constructor.");
 
 		const data = await this.#request("https://media.deezer.com/v1/get_url", {
 			method: "POST",
