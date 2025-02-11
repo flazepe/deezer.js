@@ -5,7 +5,7 @@
 	"main": "src/index.js",
 	"types": "src/index.d.ts",
 	"scripts": {
-		"docs:build": "jsdoc src/index.js -c jsdoc.json -d docs"
+		"docs:build": "jsdoc src -d docs -R README.md -t node_modules/clean-jsdoc-theme"
 	},
 	"author": "flazepe",
 	"license": "MIT",

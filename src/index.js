@@ -2,6 +2,13 @@ const blowfish = require("blowfish-js"),
 	{ createHash } = require("crypto"),
 	{ request } = require("https");
 
+/**
+ * @typedef {Object} Entity An object with entity type, info, and resolved tracks
+ * @property {string} type The entity type
+ * @property {Object} info The entity information
+ * @property {Array} tracks An array of the entity's tracks
+ */
+
 class Deezer {
 	static #CBC_KEY = "g4el58wc" + "0zvf9na1";
 	static #ENTITY_TYPES = ["track", "album", "artist", "playlist"];
@@ -78,14 +85,11 @@ class Deezer {
 	 * Searches for entities.
 	 * @param {string} query The query
 	 * @param {"track" | "album" | "artist" | "playlist"} [type = "track"] The entity type
-	 * @returns {Promise<Array>} An array of search results
+	 * @returns {Promise.<Array>} An array of search results, depending on the entity type
 	 */
 	async search(query, type) {
 		if (typeof query !== "string") throw new TypeError("`query` must be a string.");
-
-		type = type?.toLowerCase?.();
-		if (!Deezer.#ENTITY_TYPES.includes(type)) type = "track";
-
+		type = Deezer.#ENTITY_TYPES.find(e => e === type?.toLowerCase?.()) ?? "track";
 		return (await this.api("deezer.pageSearch", { query, start: 0, nb: 200, top_tracks: true })).results[type.toUpperCase()].data;
 	}
 
@@ -93,14 +97,14 @@ class Deezer {
 	 * Gets an entity by ID or URL.
 	 * @param {string} idOrURL The entity ID or URL
 	 * @param {"track" | "album" | "artist" | "playlist"} [type] The entity type. Optional if a URL is provided
-	 * @returns {Promise<Object | null>} An object with entity info and resolved tracks
+	 * @returns {Promise.<Entity | null>} The {@link Entity} object, or null if no entity was found
 	 */
 	async get(idOrURL, type) {
 		if (typeof idOrURL !== "string") throw new TypeError("`idOrURL` must be a string.");
 
 		if (type) {
 			if (typeof type !== "string") throw new TypeError("`type` must be a string.");
-			type = type.toLowerCase();
+			type = Deezer.#ENTITY_TYPES.find(e => e === type.toLowerCase()) ?? "track";
 		} else {
 			while (idOrURL.endsWith("/")) idOrURL = idOrURL.slice(0, -1);
 
@@ -144,8 +148,8 @@ class Deezer {
 	/**
 	 * Gets a track buffer and decrypts it. By default, the track is in MP3.
 	 * @param {Object} track The track object
-	 * @param {boolean} [flac = false] Whether to get the track in FLAC. Works for Deezer Premium accounts only
-	 * @returns {Promise<Buffer>} The decrypted track buffer
+	 * @param {boolean} [flac = false] Whether to get the track in FLAC. Only works for Deezer Premium accounts
+	 * @returns {Promise.<Buffer>} The decrypted track buffer
 	 */
 	async getAndDecryptTrack(track, flac = false) {
 		if (track?.constructor !== Object) throw new TypeError("`track` must be an object.");
@@ -206,4 +210,4 @@ class Deezer {
 	}
 }
 
-module.exports = { Deezer };
+module.exports = Deezer;
