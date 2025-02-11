@@ -164,10 +164,7 @@ class Deezer {
 			if (!Number(track.FILESIZE_FLAC)) throw new Error("FLAC audio is unavailable for this track.");
 		}
 
-		const format = flac
-			? "FLAC"
-			: ["FILESIZE_MP3_320", "FILESIZE_MP3_256", "FILESIZE_MP3_128", "FILESIZE_MP3_64"].find(e => Number(track[e]))?.replace("FILESIZE_", "");
-
+		const format = flac ? "FLAC" : ["MP3_320", "MP3_256", "MP3_128", "MP3_64"].find(e => Number(track[`FILESIZE_${e}`]));
 		if (!format) throw new Error("Audio is unavailable for this track.");
 
 		const data = await this.#request("https://media.deezer.com/v1/get_url", {
