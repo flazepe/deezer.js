@@ -58,9 +58,9 @@
 	// Save track to a file
 	await writeFile(`${track.ART_NAME} - ${track.SNG_TITLE}.mp3`, trackBuffer);
 })();
-</code></pre><h3>Downloading a track in FLAC (for Deezer Premium accounts only)</h3><p>You can find your user session ID by grabbing the value of the <code>sid</code> cookie on the player after logging in.</p><pre class="prettyprint source lang-js"><code>const { writeFile } = &quot;fs/promises&quot;,
+</code></pre><h3>Downloading a track in FLAC (for Deezer Premium accounts only)</h3><p>Provide the Deezer <code>arl</code> cookie to the constructor to authenticate as a Deezer Premium account.</p><pre class="prettyprint source lang-js"><code>const { writeFile } = &quot;fs/promises&quot;,
 	Deezer = require(&quot;@flazepe/deezer.js&quot;),
-	deezer = new Deezer(&quot;xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx&quot;); // Insert your user session ID here
+	deezer = new Deezer(&quot;xxxxxxxxxxxxxxxxxxxx&quot;); // Insert your arl cookie here
 
 (async () => {
 	const tracks = await deezer.search(&quot;From Under Cover (Caught Up In A Love Song)&quot;),

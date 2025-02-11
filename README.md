@@ -79,12 +79,12 @@ const { writeFile } = "fs/promises",
 
 ### Downloading a track in FLAC (for Deezer Premium accounts only)
 
-You can find your user session ID by grabbing the value of the `sid` cookie on the player after logging in.
+Provide the Deezer `arl` cookie to the constructor to authenticate as a Deezer Premium account.
 
 ```js
 const { writeFile } = "fs/promises",
 	Deezer = require("@flazepe/deezer.js"),
-	deezer = new Deezer("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"); // Insert your user session ID here
+	deezer = new Deezer("xxxxxxxxxxxxxxxxxxxx"); // Insert your arl cookie here
 
 (async () => {
 	const tracks = await deezer.search("From Under Cover (Caught Up In A Love Song)"),
