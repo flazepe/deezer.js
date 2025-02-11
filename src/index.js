@@ -154,30 +154,35 @@ class Deezer {
 	 */
 	async getAndDecryptTrack(track, flac = false) {
 		if (track?.constructor !== Object) throw new TypeError("`track` must be an object.");
-		if (["SNG_ID", "TRACK_TOKEN"].some(e => !(e in track))) throw new TypeError("`track` must be a valid track object.");
 
 		await this.#ensureSession();
 
-		if (flac && !this.#isPremium)
-			throw new Error("FLAC is only supported on Deezer Premium accounts. Please provide the Deezer ARL cookie to the constructor.");
+		if (flac) {
+			if (!this.#isPremium)
+				throw new Error("FLAC is only supported on Deezer Premium accounts. Please provide the Deezer ARL cookie to the constructor.");
+
+			if (!Number(track.FILESIZE_FLAC)) throw new Error("FLAC audio is unavailable for this track.");
+		}
+
+		const format = flac
+			? "FLAC"
+			: ["FILESIZE_MP3_320", "FILESIZE_MP3_256", "FILESIZE_MP3_128", "FILESIZE_MP3_64"].find(e => Number(track[e]))?.replace("FILESIZE_", "");
+
+		if (!format) throw new Error("Audio is unavailable for this track.");
 
 		const data = await this.#request("https://media.deezer.com/v1/get_url", {
-			method: "POST",
-			body: JSON.stringify({
-				license_token: this.#licenseToken,
-				media: [
-					{
-						type: "FULL",
-						formats: [{ cipher: "BF_CBC_STRIPE", format: flac ? "FLAC" : this.#isPremium ? "MP3_320" : "MP3_128" }]
-					}
-				],
-				track_tokens: [track.TRACK_TOKEN]
-			})
-		});
+				method: "POST",
+				body: JSON.stringify({
+					license_token: this.#licenseToken,
+					media: [{ type: "FULL", formats: [{ cipher: "BF_CBC_STRIPE", format }] }],
+					track_tokens: [track.TRACK_TOKEN]
+				})
+			}),
+			url = data?.data?.[0]?.media?.[0]?.sources?.[0]?.url;
 
-		if (data.errors) throw new Error(data.errors[0].message);
+		if (!url) throw new Error(`Could not get track's audio source URL: ${data?.errors?.[0]?.message ?? "Unknown error"}`);
 
-		const buffer = await this.#request(data.data[0].media[0].sources[0].url, { buffer: true }),
+		const buffer = await this.#request(url, { buffer: true }),
 			md5 = createHash("md5").update(track.SNG_ID).digest("hex"),
 			blowfishKey = blowfish.key(
 				Array(16)
