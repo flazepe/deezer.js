@@ -89,7 +89,7 @@ const { writeFile } = "fs/promises",
 (async () => {
 	const tracks = await deezer.search("From Under Cover (Caught Up In A Love Song)"),
 		track = tracks[0],
-		trackBuffer = await deezer.getAndDecryptTrack(track, true); // Set `true` for the `flac` option
+		trackBuffer = await deezer.getAndDecryptTrack(track, true); // Set the FLAC parameter to `true`
 
 	// Save track to a file
 	await writeFile(`${track.ART_NAME} - ${track.SNG_TITLE}.flac`, trackBuffer);
