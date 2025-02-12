@@ -3,8 +3,12 @@ const blowfish = require("blowfish-js"),
 	{ request } = require("https");
 
 /**
+ * @typedef {"track" | "album" | "artist" | "playlist"} EntityType An entity type
+ */
+
+/**
  * @typedef {Object} Entity An object with entity type, info, and resolved tracks
- * @property {string} type The entity type
+ * @property {EntityType} type The entity type
  * @property {Object} info The entity information
  * @property {Array} tracks An array of the entity's tracks
  */
@@ -85,7 +89,7 @@ class Deezer {
 	/**
 	 * Searches for entities.
 	 * @param {string} query The query
-	 * @param {"track" | "album" | "artist" | "playlist"} [type = "track"] The entity type
+	 * @param {EntityType} [type = "track"] The entity type
 	 * @returns {Promise.<Array>} An array of search results, depending on the entity type
 	 */
 	async search(query, type) {
@@ -97,7 +101,7 @@ class Deezer {
 	/**
 	 * Gets an entity by ID or URL.
 	 * @param {string} idOrURL The entity ID or URL
-	 * @param {"track" | "album" | "artist" | "playlist"} [type] The entity type. Optional if a URL is provided
+	 * @param {EntityType} [type] The entity type. Optional if a URL is provided
 	 * @returns {Promise.<Entity | null>} The {@link Entity} object, or null if no entity was found
 	 */
 	async get(idOrURL, type) {
