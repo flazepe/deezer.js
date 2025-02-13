@@ -46,6 +46,7 @@ class Deezer {
 					try {
 						resolve(options.buffer ? buffer : JSON.parse(buffer.toString()));
 					} catch (error) {
+						console.error(`Error parsing body as JSON: ${buffer.toString()}`);
 						reject(error);
 					}
 				});
