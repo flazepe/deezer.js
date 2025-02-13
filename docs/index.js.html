@@ -167,11 +167,11 @@ class Deezer {
 			if (!this.#isPremium)
 				throw new Error("FLAC is only supported on Deezer Premium accounts. Please provide the Deezer ARL cookie to the constructor.");
 
-			if (!Number(track.FILESIZE_FLAC)) throw new Error("FLAC audio is unavailable for this track.");
+			if (!Number(track.FILESIZE_FLAC)) throw new Error(`FLAC audio is unavailable for track ${track.SNG_ID}.`);
 		}
 
 		const format = flac ? "FLAC" : ["MP3_320", "MP3_256", "MP3_128", "MP3_64"].find(e => Number(track[`FILESIZE_${e}`]));
-		if (!format) throw new Error("Audio is unavailable for this track.");
+		if (!format) throw new Error(`Audio is unavailable for track ${track.SNG_ID}.`);
 
 		const data = await this.#request("https://media.deezer.com/v1/get_url", {
 				method: "POST",
@@ -183,7 +183,7 @@ class Deezer {
 			}),
 			url = data?.data?.[0]?.media?.[0]?.sources?.[0]?.url;
 
-		if (!url) throw new Error(`Could not get track's audio source URL: ${data?.errors?.[0]?.message ?? "Unknown error"}`);
+		if (!url) throw new Error(`Could not get track ${track.SNG_ID}'s audio source URL: ${data?.errors?.[0]?.message ?? "Unknown error"}`);
 
 		const buffer = await this.#request(url, { buffer: true }),
 			md5 = createHash("md5").update(track.SNG_ID).digest("hex"),
@@ -203,11 +203,10 @@ class Deezer {
 			let chunk = Buffer.alloc(chunkSize);
 			buffer.copy(chunk, 0, position, position + chunkSize);
 
-			if (i % 3 || chunkSize &lt; 2048) {
-				chunk = chunk.toString("binary");
-			} else {
-				chunk = blowfish.cbc(blowfishKey, Buffer.from([0, 1, 2, 3, 4, 5, 6, 7]), chunk, true).toString("binary");
-			}
+			chunk =
+				i % 3 || chunkSize &lt; 2048
+					? chunk.toString("binary")
+					: blowfish.cbc(blowfishKey, Buffer.from([0, 1, 2, 3, 4, 5, 6, 7]), chunk, true).toString("binary");
 
 			decryptedBuffer.write(chunk, position, chunk.length, "binary");
 
