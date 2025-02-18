@@ -102,7 +102,7 @@ class Deezer {
 	/**
 	 * Gets an entity by ID or URL.
 	 * @param {string} idOrURL The entity ID or URL
-	 * @param {EntityType} [type] The entity type. Optional if a URL is provided
+	 * @param {EntityType} [type] The entity type
 	 * @returns {Promise.<Entity | null>} The {@link Entity} object, or null if no entity was found
 	 */
 	async get(idOrURL, type) {
@@ -114,10 +114,10 @@ class Deezer {
 		} else {
 			while (idOrURL.endsWith("/")) idOrURL = idOrURL.slice(0, -1);
 
-			type = Deezer.#ENTITY_TYPES.find(e => idOrURL.toLowerCase().includes(e));
+			type = Deezer.#ENTITY_TYPES.find(e => idOrURL.toLowerCase().includes(e)) ?? "track";
 			idOrURL = idOrURL.split("/").pop().split("?").shift();
 
-			if (!type || !/^[0-9]+$/.test(idOrURL)) return null;
+			if (!/^[0-9]+$/.test(idOrURL)) return null;
 		}
 
 		const data = { type };
@@ -161,6 +161,11 @@ class Deezer {
 		if (track?.constructor !== Object) throw new TypeError("`track` must be an object.");
 
 		await this.#ensureSession();
+
+		if (!Number(track.FILESIZE) && track.FALLBACK) {
+			console.info(`Audio is unavailable for track ${track.SNG_ID}. Using fallback track ${track.FALLBACK.SNG_ID}...`);
+			track = track.FALLBACK;
+		}
 
 		if (flac) {
 			if (!this.#isPremium)
